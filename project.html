@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zijun, Wang Environmental Monitoring</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.3/mqttws31.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #001f3f;
+            color: white;
+        }
+        .container {
+            padding: 20px;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        .card {
+            background: #004080;
+            padding: 20px;
+            border-radius: 10px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            color: #000;
+        }
+        table th, table td {
+            padding: 10px;
+            text-align: center;
+            background: #f4f4f4;
+            border: 1px solid #ddd;
+        }
+        canvas {
+            max-width: 100%;
+            height: 300px;
+        }
+        #protected-content {
+            display: none;
+        }
+        #password-prompt {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: #001f3f;
+            color: white;
+        }
+        #password-prompt input {
+            margin-top: 10px;
+            padding: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div id="password-prompt">
+        <h2>Please enter the password:</h2>
+        <input type="password" id="password-input" placeholder="Enter password" />
+        <button onclick="validatePassword()">Submit</button>
+        <p id="error-message" style="color: red; display: none;">Incorrect password, try again.</p>
+    </div>
+
+    <div id="protected-content">
+        <header>
+            <h1 style="text-align: center;">Environment Monitoring</h1>
+        </header>
+        <div class="container">
+            <div class="grid">
+                <!-- Real-Time Data -->
+                <div class="card">
+                    <h2>Real-Time Data</h2>
+                    <p><b>Temperature:</b> <span id="temp">20.93</span> °C</p>
+                    <p><b>Humidity:</b> <span id="hum">39.1</span> %</p>
+                    <p><b>Air Pressure:</b> <span id="press">1035.55</span> hPa</p>
+                    <p><b>Noise:</b> <span id="noise">179.84</span> dB</p>
+                </div>
+                <!-- Real-Time Chart -->
+                <div class="card">
+                    <h2>Real-Time Chart</h2>
+                    <canvas id="realTimeChart"></canvas>
+                </div>
+            </div>
+            <div class="card">
+                <h2>Historical Data</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Time</th>
+                            <th>Temperature</th>
+                            <th>Humidity</th>
+                            <th>Air Pressure</th>
+                            <th>Noise</th>
+                        </tr>
+                    </thead>
+                    <tbody id="historicalData">
+                        <tr>
+                            <td>2024-11-16 20:12:30.682</td>
+                            <td>23.19</td>
+                            <td>37.96</td>
+                            <td>1023.96</td>
+                            <td>134.8</td>
+                        </tr>
+                        <tr>
+                            <td>2024-11-16 20:13:00.684</td>
+                            <td>23.04</td>
+                            <td>35.62</td>
+                            <td>1023.92</td>
+                            <td>135.12</td>
+                        </tr>
+                        <tr>
+                            <td>2024-11-16 20:13:30.688</td>
+                            <td>23.00</td>
+                            <td>35.43</td>
+                            <td>1023.96</td>
+                            <td>134.8</td>
+                        </tr>
+                        <tr>
+                            <td>2024-11-16 20:14:00.688</td>
+                            <td>22.91</td>
+                            <td>35.52</td>
+                            <td>1023.92</td>
+                            <td>134.8</td>
+                        </tr>
+                        <tr>
+                            <td>2024-11-16 20:14:30.676</td>
+                            <td>22.86</td>
+                            <td>35.14</td>
+                            <td>1024.01</td>
+                            <td>135.75</td>
+                        </tr>
+                        <tr>
+                            <td>2024-11-16 20:15:00.666</td>
+                            <td>22.85</td>
+                            <td>35.62</td>
+                            <td>1024.00</td>
+                            <td>134.48</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function validatePassword() {
+            const password = document.getElementById('password-input').value;
+            if (password === 'wangzijun') {
+                document.getElementById('password-prompt').style.display = 'none';
+                document.getElementById('protected-content').style.display = 'block';
+                initializeChart(); // Ensure the chart is initialized after content is displayed
+            } else {
+                document.getElementById('error-message').style.display = 'block';
+            }
+        }
+
+        function initializeChart() {
+            const ctx = document.getElementById('realTimeChart').getContext('2d');
+            const realTimeChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['20:12', '20:13', '20:14', '20:15'], // Time labels
+                    datasets: [
+                        {
+                            label: 'Temperature (°C)',
+                            data: [23.19, 23.04, 23.00, 22.85],
+                            borderColor: 'red',
+                            fill: false
+                        },
+                        {
+                            label: 'Humidity (%)',
+                            data: [37.96, 35.62, 35.43, 35.62],
+                            borderColor: 'blue',
+                            fill: false
+                        },
+                        {
+                            label: 'Air Pressure (hPa)',
+                            data: [1023.96, 1023.92, 1023.96, 1024.00],
+                            borderColor: 'green',
+                            fill: false
+                        },
+                        {
+                            label: 'Noise (dB)',
+                            data: [134.8, 135.12, 134.8, 134.48],
+                            borderColor: 'orange',
+                            fill: false
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { display: true }
+                    },
+                    scales: {
+                        x: { display: true },
+                        y: { display: true }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
